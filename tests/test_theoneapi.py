@@ -20,6 +20,18 @@ class TestTheOneAPI(unittest.TestCase):
         "The Unexpected Journey",
     ]
 
+    SORTED_OF_THE_MOVIE_NAMES = [
+        "The Battle of the Five Armies",
+        "The Fellowship of the Ring",
+        "The Lord of the Rings Series",
+        "The Return of the King",
+    ]
+
+    SORTED_BIG_WINNER_MOVIE_NAMES = [
+        "The Lord of the Rings Series",
+        "The Return of the King",
+    ]
+
     def test_init(self):
         api = sdk.TheOneApi(VALID_API_KEY)
         self.assertEqual(api._api_key, VALID_API_KEY)
@@ -92,3 +104,30 @@ class TestTheOneAPI(unittest.TestCase):
         # self.assertEqual(len(movies["docs"]), 3)
         # self.assertEqual([movie["name"] for movie in movies["docs"]], TestTheOneAPI.SORTED_MOVIE_NAMES[4:7])
         pass
+
+    def test_movies_filter(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        options = sdk.RequestOptions(sort="name", filter="name=The Battle of the Five Armies")
+        movies = api.movies(options=options)
+        self.assertEqual([movie["name"] for movie in movies["docs"]], TestTheOneAPI.SORTED_MOVIE_NAMES[0:1])
+
+        options = sdk.RequestOptions(sort="name", filter="name!=The Battle of the Five Armies")
+        movies = api.movies(options=options)
+        self.assertEqual([movie["name"] for movie in movies["docs"]], TestTheOneAPI.SORTED_MOVIE_NAMES[1:])
+
+        options = sdk.RequestOptions(sort="name", filter="name=Doesn't Exist")
+        movies = api.movies(options=options)
+        self.assertEqual([movie["name"] for movie in movies["docs"]], [])
+
+        options = sdk.RequestOptions(sort="name", filter="name=The Desolation of Smaug,The Battle of the Five Armies")
+        movies = api.movies(options=options)
+        self.assertEqual([movie["name"] for movie in movies["docs"]], TestTheOneAPI.SORTED_MOVIE_NAMES[0:2])
+
+        options = sdk.RequestOptions(sort="name", filter="name=/Of The/i")
+        movies = api.movies(options=options)
+        self.assertEqual([movie["name"] for movie in movies["docs"]], TestTheOneAPI.SORTED_OF_THE_MOVIE_NAMES)
+
+        options = sdk.RequestOptions(sort="-academyAwardWins", filter="academyAwardWins>=10")
+        movies = api.movies(options=options)
+        self.assertEqual([movie["name"] for movie in movies["docs"]], TestTheOneAPI.SORTED_BIG_WINNER_MOVIE_NAMES)
+
