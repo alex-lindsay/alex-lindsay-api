@@ -131,3 +131,34 @@ class TestTheOneAPI(unittest.TestCase):
         movies = api.movies(options=options)
         self.assertEqual([movie["name"] for movie in movies["docs"]], TestTheOneAPI.SORTED_BIG_WINNER_MOVIE_NAMES)
 
+    def test_movie_object(self):
+        movie_dict = {
+            "_id": "5cd95395de30eff6ebccde5c",
+            "name": "The Fellowship of the Ring",
+            "runtimeInMinutes": 178,
+            "budgetInMillions": 93,
+            "boxOfficeRevenueInMillions": 871.5,
+            "academyAwardNominations": 13,
+            "academyAwardWins": 4,
+            "rottenTomatesScore": 91,
+            "invalidProperty": "Whatever",
+        }
+        result_dict = movie_dict.copy()
+        result_dict["id"] = result_dict.pop("_id")  # The API returns _id, but the SDK returns id
+        result_dict.pop("invalidProperty") # The SDK should not return invalid properties
+        movie = sdk.Movie().from_dict(movie_dict)
+        pprint(movie.as_dict())
+
+        self.assertEqual(movie["id"], "5cd95395de30eff6ebccde5c")
+        self.assertEqual(movie["name"], "The Fellowship of the Ring")
+        self.assertEqual(movie["runtimeInMinutes"], 178)
+        self.assertEqual(movie["budgetInMillions"], 93)
+        self.assertEqual(movie["boxOfficeRevenueInMillions"], 871.5)
+        self.assertEqual(movie["academyAwardNominations"], 13)
+        self.assertEqual(movie["academyAwardWins"], 4)
+        self.assertEqual(movie["rottenTomatesScore"], 91)
+        with self.assertRaises(KeyError):
+            movie["invalidProperty"]
+        with self.assertRaises(KeyError):
+            movie["nonexistentProperty"]
+        self.assertDictEqual(movie.as_dict(), result_dict)
