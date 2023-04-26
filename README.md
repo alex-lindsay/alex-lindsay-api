@@ -15,4 +15,4 @@ To uninstall the SDK, run `pip uninstall theoneapi`.
 
 ## Testing:
 
-python -m coverage run -m pytest tests/*.py && coverage report
+pip install --upgrade . && python -m coverage run -m pytest tests/*.py && coverage html
