@@ -594,7 +594,7 @@ class Movies(TheOneApiBase):
     def __init__(self, api: "TheOneApi", options: "RequestOptions" = None) -> None:
         super().__init__(api, options)
 
-    # TODO: Error handling - senfing a page number of 0 or less returns an error message JSON
+    # TODO: Error handling - sending a page number of 0 or less returns an error message JSON
     def fetch(self) -> "Movies":
         """
         Fetches movie data from the API using the given options and returns the object for chaining.
