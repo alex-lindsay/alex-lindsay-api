@@ -1,11 +1,10 @@
 from typing import TypeVar, Generic, Union
+from abc import ABC, abstractmethod
 import requests
 import pprint
 
-T = TypeVar("T")
 
-
-class TheOneApiBase:
+class TheOneApiBase(ABC):
     """
     Base class for objects that will be retrived using TheOneApi
 
@@ -27,7 +26,128 @@ class TheOneApiBase:
         The page number of the results.
     pages : int
         The total number of pages of results.
+
+    Methods
+    -------
+    set_options(options: RequestOptions) -> None
+        Sets the options attribute to the given RequestOptions object.
+
+    get_options() -> RequestOptions
+        Returns the RequestOptions object used to make the request.
+    
+    fetch() -> TheOneApiBase
+        Fetches the data from the API using the given options and returns the object for chaining.
+
+    next_page() -> TheOneApiBase
+        Fetches the next page of results and returns the object for chaining.
+
+    previous_page() -> TheOneApiBase
+        Fetches the previous page of results and returns the object for chaining.
+
+    limit(limit: int) -> TheOneApiBase
+        Sets the limit option to the given value and returns the object for chaining.
+
+    page(page: int) -> TheOneApiBase
+        Sets the page option to the given value and returns the object for chaining.
+
+    offset(offset: int) -> TheOneApiBase
+        Sets the offset option to the given value and returns the object for chaining.
+
+    sort(sort: str, ascending: boolean = True) -> TheOneApiBase
+        Sets the sort option to the given value, marking it as ascending as needed and returns the object for chaining.
+    
+    filter(filter: str) -> TheOneApiBase
+        Sets the filter option to the given value and returns the object for chaining.
+
+    match(field: str, value: Union[str, int, float], negate: boolean = False) -> TheOneApiBase
+        Sets the filter option to a string for matching the given field to the given value and returns the object for chaining.
+
+    include(field: str, values: list(Union[str, int, float])) -> TheOneApiBase
+        Sets the filter option to a string for matching the given field to any of the given values and returns the object for chaining.
+
+    exclude(field: str, values: list(Union[str, int, float])) -> TheOneApiBase
+        Sets the filter option to a string for matching the given field to anything not one of the given values and returns the object for chaining.
+
+    exists(field: str, negate: boolean = False) -> TheOneApiBase
+        Sets the filter option to a string for matching if the given field exists (or doesn't exist, based on the negate parameter) and returns the object for chaining.
+
+    regex(field: str, pattern: str, negate: boolean = False) -> TheOneApiBase
+        Sets the filter option to a string for matching the given field to the given regular expression pattern (or the inverse, based on the negate parameter) and returns the object for chaining.
+
+    lessThan(field: str, value: Union[str, int, float], orEqual: boolean = False) -> TheOneApiBase
+        Sets the filter option to a string for matching the given field to values less than (or optionally equal to) the given value and returns the object for chaining.
+
+    greaterThan(field: str, value: Union[str, int, float], orEqual: boolean = False) -> TheOneApiBase
+        Sets the filter option to a string for matching the given field to values greater than (or optionally equal to) the given value and returns the object for chaining.
     """
+
+    def __init__(self, api: "TheOneApi", options: "RequestOptions" = None) -> None:
+        self.api = api
+        self.options = options is not None and options or RequestOptions()
+        self.docs = []
+        self.total = 0
+        self.limit = 0
+        self.offset = 0
+        self.page = 0
+        self.pages = 0
+
+
+    def set_metadata(self, data: dict) -> 'TheOneApiBase':
+        """
+        Updates the attributes of the Base object with the values from the data dict.
+        Child classes are expected to convert the docs list into a list of BaseDoc objects.
+
+        Parameters
+        ----------
+        data : dict
+            A dictionary of key/value pairs to update the Movies object with.
+        """
+
+        self.total = "total" in data and data["total"] or None
+        self.limit = "limit" in data and data["limit"] or None
+        self.offset = "offset" in data and data["offset"] or None
+        self.page = "page" in data and data["page"] or None
+        self.pages = "pages" in data and data["pages"] or None
+        return self
+
+
+    def set_options(self, options: "RequestOptions") -> "TheOneApiBase":
+        """
+        Sets the options attribute to the given RequestOptions object.
+
+        Parameters
+        ----------
+        options : RequestOptions
+            The RequestOptions object to set the options attribute to.
+        """
+
+        self.options = options
+        return self
+
+    def get_options(self) -> "RequestOptions":
+        """
+        Returns the options attribute.
+
+        Returns
+        -------
+        RequestOptions
+            The options attribute.
+        """
+
+        return self.options
+    
+    @abstractmethod
+    def fetch(self) -> "TheOneApiBase":
+        """
+        Fetches the data from the API using the given options and returns the object for chaining.
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        pass
 
 
 class TheOneApiDocBase:
@@ -163,6 +283,37 @@ class Quote(TheOneApiDocBase):
 
     def __init__(self) -> None:
         super().__init__()
+
+
+class Movies(TheOneApiBase):
+    """
+    A class for retrieving a list of movies from the-one-api.dev and representing them as a list of Movie objects.
+
+    Attributes
+    ----------
+    docs : list[Movie]
+        The list of Movie objects returned by the request.
+    """
+
+    def __init__(self, api: "TheOneApi", options: "RequestOptions" = None) -> None:
+        super().__init__(api, options)
+
+    def fetch(self) -> "Movies":
+        """
+        Fetches the data from the API using the given options and returns the object for chaining.
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        data = self.api.movies(self.options)
+        super().set_metadata(data)
+        self.docs = "docs" in data and [Movie().from_dict(movie) for movie in data["docs"]] or []
+
+        return self
+
 
 
 class RequestOptions:
@@ -314,6 +465,7 @@ class TheOneApi:
 
         """
 
+        # TODO - Deal with error conditions - get happy path working first
         url = self.BASE_URL + "movie"
         url = options and options.url_with_query(url) or url
         headers = {"Authorization": "Bearer " + self._api_key}

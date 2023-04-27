@@ -178,3 +178,18 @@ class TestTheOneAPI(unittest.TestCase):
         with self.assertRaises(KeyError):
             quote["nonexistentProperty"]
         self.assertDictEqual(quote.as_dict(), result_dict)
+
+    def test_movies_object_set_options(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        options = sdk.RequestOptions(sort="name", filter="name=The Battle of the Five Armies")
+        movies = sdk.Movies(api).set_options(options)
+        self.assertEqual(movies.get_options(), options)
+
+    def test_movies_object_fetch(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        movies = sdk.Movies(api).fetch()
+        self.assertEqual(movies.total, 8)
+        self.assertEqual(movies.page, 1)
+        self.assertEqual(movies.pages, 1)
+        self.assertEqual(len(movies.docs), 8)
+        self.assertSetEqual(frozenset([movie.name for movie in movies.docs]), frozenset(TestTheOneAPI.SORTED_MOVIE_NAMES))
