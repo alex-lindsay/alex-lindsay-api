@@ -21,15 +21,17 @@ class TheOneApiBase(ABC):
         The RequestOptions object that was used to make the request.
     docs : list[T]
         The list of objects returned by the request.
-    total : int
+    metadata : dict
+        A dictionary of metadata returned by the request.
+    metadata.total : int
         The total number of movies in the database.
-    limit : int
+    metadata.limit : int
         The number of movies per page.
-    offset : int
+    metadata.offset : int
         The number of movies to skip before returning results.
-    page : int
+    metadata.page : int
         The page number of the results.
-    pages : int
+    metadata.pages : int
         The total number of pages of results.
 
     Methods
@@ -39,6 +41,9 @@ class TheOneApiBase(ABC):
 
     get_options() -> RequestOptions
         Returns the RequestOptions object used to make the request.
+
+    get_metadata() -> RequestOptions
+        Returns the metadata values based on the last request.
 
     fetch() -> TheOneApiBase
         Fetches the data from the API using the given options and returns the object for chaining.
@@ -86,15 +91,19 @@ class TheOneApiBase(ABC):
         Sets the filter option to a string for matching the given field to values greater than (or optionally equal to) the given value and returns the object for chaining.
     """
 
+    METADATA_FIELDS = ["total", "limit", "offset", "page", "pages"]
+
     def __init__(self, api: "TheOneApi", options: "RequestOptions" = None) -> None:
         self.api = api
         self.options = options is not None and options or RequestOptions()
         self.docs = []
-        self.total = 0
-        self.limit = 0
-        self.offset = 0
-        self.page = 0
-        self.pages = 0
+        self.metadata = {
+            "total": 0,
+            "limit": 0,
+            "offset": 0,
+            "page": 0,
+            "pages": 0
+        }
 
     def set_metadata(self, data: dict) -> "TheOneApiBase":
         """
@@ -107,11 +116,8 @@ class TheOneApiBase(ABC):
             A dictionary of key/value pairs to update the Movies object with.
         """
 
-        self.total = "total" in data and data["total"] or None
-        self.limit = "limit" in data and data["limit"] or None
-        self.offset = "offset" in data and data["offset"] or None
-        self.page = "page" in data and data["page"] or None
-        self.pages = "pages" in data and data["pages"] or None
+        metadata = [(k, k in data and data[k] or None) for k in self.METADATA_FIELDS]
+        self.metadata = dict(metadata)
         return self
 
     def set_options(self, options: "RequestOptions") -> "TheOneApiBase":
@@ -171,7 +177,24 @@ class TheOneApiBase(ABC):
 
         self.options.sort = order.value + field
         return self
-    
+
+    def limit(self, limit: int) -> "TheOneApiBase":
+        """
+        Sets the limit option to the given value and returns the object for chaining.
+
+        Parameters
+        ----------
+        limit : int
+            The value to set the limit option to.
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        self.options.limit = limit
+        return self
 
 
 class TheOneApiDocBase:
