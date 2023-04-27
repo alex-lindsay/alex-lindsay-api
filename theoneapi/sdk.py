@@ -377,6 +377,48 @@ class TheOneApiBase(ABC):
 
         self.options.filter = f"{field}{negate and '!' or ''}={regex}"
         return self
+    
+    def less_than(self, field: str, value: Union[str, int, float], orEqual: bool = False) -> "TheOneApiBase":
+        """
+        Sets the filter option to a string for matching the given field to a value less than the given value and returns the object for chaining.
+
+        Parameters
+        ----------
+        field : str
+            The field to match.
+        value : Union[str,int,float]
+            The value to match the field to.
+        orEqual : bool, optional
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        self.options.filter = f"{field}<{orEqual and '=' or ''}{value}"
+        return self
+    
+    def greater_than(self, field: str, value: Union[str, int, float], orEqual: bool = False) -> "TheOneApiBase":
+        """
+        Sets the filter option to a string for matching the given field to a value greater than the given value and returns the object for chaining.
+
+        Parameters
+        ----------
+        field : str
+            The field to match.
+        value : Union[str,int,float]
+            The value to match the field to.
+        orEqual : bool, optional
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        self.options.filter = f"{field}>{orEqual and '=' or ''}{value}"
+        return self
 
 
 class TheOneApiDocBase:

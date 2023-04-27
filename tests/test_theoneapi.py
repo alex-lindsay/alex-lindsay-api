@@ -380,3 +380,23 @@ class TestTheOneAPI(unittest.TestCase):
         movies = sdk.Movies(api).sort("name").regex("name", "/of the/i").fetch()
         self.assertEqual(len(movies.docs), len(self.SORTED_OF_THE_MOVIE_NAMES))
         self.assertListEqual([movie.name for movie in movies.docs], self.SORTED_OF_THE_MOVIE_NAMES)
+
+    def test_movies_object_less_than(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        movies = sdk.Movies(api).sort("budgetInMillions").less_than("budgetInMillions", 94).fetch()
+        self.assertEqual(len(movies.docs), 1)
+        self.assertListEqual([movie.budgetInMillions for movie in movies.docs], [93])
+
+        movies = sdk.Movies(api).sort("budgetInMillions").less_than("budgetInMillions", 94, True).fetch()
+        self.assertEqual(len(movies.docs), 3)
+        self.assertListEqual([movie.budgetInMillions for movie in movies.docs], [93, 94, 94])
+
+    def test_movies_object_greater_than(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        movies = sdk.Movies(api).sort("academyAwardWins", sdk.SortOrder.DESCENDING).greater_than("academyAwardWins", 11).fetch()
+        self.assertEqual(len(movies.docs), 1)
+        self.assertListEqual([movie.name for movie in movies.docs], self.SORTED_BIG_WINNER_MOVIE_NAMES[0:1])
+
+        movies = sdk.Movies(api).sort("academyAwardWins", sdk.SortOrder.DESCENDING).greater_than("academyAwardWins", 11, True).fetch()
+        self.assertEqual(len(movies.docs), 2)
+        self.assertListEqual([movie.name for movie in movies.docs], self.SORTED_BIG_WINNER_MOVIE_NAMES)
