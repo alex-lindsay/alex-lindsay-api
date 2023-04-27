@@ -19,10 +19,48 @@ There is an opportunity to add caching within the SDK architecture so that unnec
 
 Type Hinting is used to help ensure that internal consistency is managed, given Python's loose typing.
 
-Fundamentally relatively straightforward, this SDK uses few supporting packages:
-`typing` is used to provide a Union type which is utilized for some of the filters which can use string, int, or float values.
-`abc` is used to help protect the AbstractBaseClasses (TheOneApiBase and TheOneApiDocBase) from being able to be directly instantiated. (Untested/unverified)
-`enum` is used to provide a SortOrder enumeration to help with readability for the TheOneApiBase.sort method.
+I made a design choice to migrate the `_id` property provided in the data returned by the API calls to a more overt `id` property, since that id is used for making calls to the detail APIs and is used for the filtering, rather than filtering happening by name (e.g.: the quote document has `movie` and `character` properties that are **ids** representing those objects).
+
+This SDK uses few supporting packages:
+
+* `typing` is used to provide a Union type which is utilized for some of the filters which can use string, int, or float values.
+* `abc` is used to help protect the AbstractBaseClasses (TheOneApiBase and TheOneApiDocBase) from being able to be directly instantiated. (Untested/unverified)
+* `enum` is used to provide a SortOrder enumeration to help with readability for the TheOneApiBase.sort method.
+* `decouple` is used for importing the API_KEY from a .env file for tests and the example file.
+
+I used a two layer approach for the overall design: 
+
+* A low-level technical set of APIs that interact in a fairly close way with the external API.
+* A more conceptual set of classes that make use of the technical APIs to fulfill their data requests. 
+    * `TheOneApiBase` — an abstract base class
+        * provides the query capabilities made available to both *movies* and *quotes* (pagination, sorting, filtering)
+        * `docs` element — holds a collection of documents returned and processed by the appropriate low level function
+        * `fetch` function — left abstract
+        * Delegation — migration of the result data from the low-level function into result objects is delegated to the `TheOneApiDocBase` child classes.
+    * `Movies` — derived from `TheOneApiBase`
+        * `fetch` - uses the low-level `movies` function to retrieve *movie* documents and creates a docs collection internally, delegating the migration of a *movie* data doc to the `Movie` class.
+        * `by_id` — uses the low-level `movie` function to retrieve a specialized collection of a single *movie* document, delegating the migration of a movie data doc to the `Movie` class.
+    * `Quotes` — derived from `TheOneApiBase`
+        * `fetch` - uses the low-level `quotes` function to retrieve *quote* documents and creates a docs collection internally, delegating the migration of a *quote* data doc to the `Quote` class.
+        * `by_id` — uses the low-level `quote` function to retrieve a specialized collection of a single *quote* document, delegating the migration of a *quote* data doc to the `Movie` class.
+    * `TheOneApiDocBase` — an abstract base class
+        * provides an abstraction layer for the data structures underlying both a *movie* and a *quote*
+        * `__getitem__` — allows for accessing document internal members using dict syntax
+        * `as_dict` — returns a dict containing the known data members
+        * `from_dict` — migrats data from the document provided by a low-level function into the internal data structure
+    * `Movie` - a document of *movie* information
+        * `quotes` — function which allows for the retrieval of a collection of *quote* documents related to the *movie* in question.
+    * `Quote` — a document of *quote* information
+        * TODO `movie` — a function which retrieves the related `Movies` collection.
+    * `RequestOptions` — provides an interface for managing generalize query properties
+        * `url_with_query` — a mechanism for taking a url and appending the proper query string to it based on the options present
+    * `SortOrder` — an enumeration of ASCENDING and DESCENDING values to make sort order queries more readable.
+    * `TheOneApi` — low-level functions close to the-one-api interface
+        * `movies` — query for multiple movies using RequestOptions
+        * `movie` — query for a single movie using an id
+        * `quotes` — query for multiple quotes using RequestOptions
+        * `quote` — query for a single quote using an id
+        * `movie_quotes` — query for multiple quotes for a single movie using a movie id and RequestOptions
 
 ## Installation:
 
@@ -70,3 +108,22 @@ Run all tests, show coverage (development):
 Run one specific test:
 
     pip install --upgrade . && pytest -v tests/test_theoneapi.py::TestTheOneAPI::test_movies_object_limit
+
+## Version History:
+
+### 0.1.0
+
+* Initial Release
+    * Low-Level interface to the following APIs
+        * https://the-one-api.dev/v2/movies
+        * https://the-one-api.dev/v2/movies/{id}
+        * https://the-one-api.dev/v2/quotes
+        * https://the-one-api.dev/v2/quotes/{id}
+        * https://the-one-api.dev/v2/movies/{id}/quotes
+    * Functional API representing
+        * Movies collection of Movie documents and querying
+        * Movie document
+            * Related Quotes
+        * Quotes collection of Quote documents and querying
+    * Basic Documentation
+    * Example Script
