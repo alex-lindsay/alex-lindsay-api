@@ -48,8 +48,10 @@ class TheOneApiDocBase:
         Returns a dictionary of the object's attributes.
     """
 
+    VALID_ATTRIBUTES = []
+
     def __init__(self) -> None:
-        self.VALID_ATTRIBUTES = []
+        pass
 
     def __getitem__(self, key: str) -> Union[str, int, float]:
         """
@@ -82,7 +84,7 @@ class TheOneApiDocBase:
             Excludes the list of valid attributes.
         """
 
-        return {k:v for (k, v) in self.__dict__.items() if k in self.VALID_ATTRIBUTES}
+        return {k: v for (k, v) in self.__dict__.items() if k in self.VALID_ATTRIBUTES}
 
     def from_dict(self, data: dict) -> "TheOneApiDocBase":
         """
@@ -94,7 +96,6 @@ class TheOneApiDocBase:
             A dictionary of key/value pairs to update the Movie object with.
         """
 
-        
         self.__dict__.update(
             {k: v for (k, v) in data.items() if k in self.VALID_ATTRIBUTES}
         )
@@ -127,18 +128,41 @@ class Movie(TheOneApiDocBase):
         The rotten tomatoes score for the movie.
     """
 
+    VALID_ATTRIBUTES = [
+        "id",
+        "name",
+        "runtimeInMinutes",
+        "budgetInMillions",
+        "boxOfficeRevenueInMillions",
+        "academyAwardNominations",
+        "academyAwardWins",
+        "rottenTomatesScore",
+    ]
+
     def __init__(self) -> None:
         super().__init__()
-        self.VALID_ATTRIBUTES = [
-            "id",
-            "name",
-            "runtimeInMinutes",
-            "budgetInMillions",
-            "boxOfficeRevenueInMillions",
-            "academyAwardNominations",
-            "academyAwardWins",
-            "rottenTomatesScore",
-        ]
+
+
+class Quote(TheOneApiDocBase):
+    """
+    A structure for representing a quote's data returned from the-one-api.dev.
+
+    Attributes
+    ----------
+    id : str
+        The unique identifier for the quote.
+    dialog : str
+        The dialog of the quote.
+    movie : str
+        The unique identifier for the movie the quote is from.
+    character : str
+        The unique identifier for the movie the quote is from.
+    """
+
+    VALID_ATTRIBUTES = ["id", "dialog", "movie", "character"]
+
+    def __init__(self) -> None:
+        super().__init__()
 
 
 class RequestOptions:
@@ -293,7 +317,5 @@ class TheOneApi:
         url = self.BASE_URL + "movie"
         url = options and options.url_with_query(url) or url
         headers = {"Authorization": "Bearer " + self._api_key}
-        pprint.pprint(url)
         response = requests.get(url, headers=headers)
-        pprint.pprint(response)
         return response.json()

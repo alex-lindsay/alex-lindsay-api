@@ -147,18 +147,34 @@ class TestTheOneAPI(unittest.TestCase):
         result_dict["id"] = result_dict.pop("_id")  # The API returns _id, but the SDK returns id
         result_dict.pop("invalidProperty") # The SDK should not return invalid properties
         movie = sdk.Movie().from_dict(movie_dict)
-        pprint(movie.as_dict())
 
-        self.assertEqual(movie["id"], "5cd95395de30eff6ebccde5c")
-        self.assertEqual(movie["name"], "The Fellowship of the Ring")
-        self.assertEqual(movie["runtimeInMinutes"], 178)
-        self.assertEqual(movie["budgetInMillions"], 93)
-        self.assertEqual(movie["boxOfficeRevenueInMillions"], 871.5)
-        self.assertEqual(movie["academyAwardNominations"], 13)
-        self.assertEqual(movie["academyAwardWins"], 4)
-        self.assertEqual(movie["rottenTomatesScore"], 91)
+        for attribute in sdk.Movie.VALID_ATTRIBUTES:
+            self.assertEqual(movie[attribute], result_dict[attribute])
         with self.assertRaises(KeyError):
             movie["invalidProperty"]
         with self.assertRaises(KeyError):
             movie["nonexistentProperty"]
         self.assertDictEqual(movie.as_dict(), result_dict)
+
+    def test_quote_object(self):
+        quote_dict = {
+            "_id": "5cd96e05de30eff6ebcce9d3",
+            "dialog": "Master. Master looks after us. Master wouldn't hurt us.",
+            "movie": "5cd95395de30eff6ebccde5b",
+            "character": "5cd99d4bde30eff6ebccfe9e",
+            "id": "5cd96e05de30eff6ebcce9d3",
+            "invalidProperty": "Whatever",
+        }
+
+        result_dict = quote_dict.copy()
+        result_dict["id"] = result_dict.pop("_id")  # The API returns _id, but the SDK returns id
+        result_dict.pop("invalidProperty") # The SDK should not return invalid properties
+        quote = sdk.Quote().from_dict(quote_dict)
+
+        for attribute in sdk.Quote.VALID_ATTRIBUTES:
+            self.assertEqual(quote[attribute], result_dict[attribute])
+        with self.assertRaises(KeyError):
+            quote["invalidProperty"]
+        with self.assertRaises(KeyError):
+            quote["nonexistentProperty"]
+        self.assertDictEqual(quote.as_dict(), result_dict)
