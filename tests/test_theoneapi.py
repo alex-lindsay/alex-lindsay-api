@@ -227,3 +227,21 @@ class TestTheOneAPI(unittest.TestCase):
         self.assertEqual(movies.metadata["pages"], 3)
         self.assertEqual(len(movies.docs), 3)
         self.assertListEqual([movie.name for movie in movies.docs], list(reversed(TestTheOneAPI.SORTED_MOVIE_NAMES))[0:3])
+
+    def test_movies_object_page(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        movies = sdk.Movies(api).sort("name").limit(3).page(2).fetch()
+        self.assertEqual(movies.metadata["limit"], 3)
+        self.assertEqual(movies.metadata["total"], 8)
+        self.assertEqual(movies.metadata["page"], 2)
+        self.assertEqual(movies.metadata["pages"], 3)
+        self.assertEqual(len(movies.docs), 3)
+        self.assertListEqual([movie.name for movie in movies.docs], TestTheOneAPI.SORTED_MOVIE_NAMES[3:6])
+
+        movies.sort("name", sdk.SortOrder.DESCENDING).fetch()
+        self.assertEqual(movies.metadata["limit"], 3)
+        self.assertEqual(movies.metadata["total"], 8)
+        self.assertEqual(movies.metadata["page"], 2)
+        self.assertEqual(movies.metadata["pages"], 3)
+        self.assertEqual(len(movies.docs), 3)
+        self.assertListEqual([movie.name for movie in movies.docs], list(reversed(TestTheOneAPI.SORTED_MOVIE_NAMES))[3:6])

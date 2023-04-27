@@ -197,6 +197,25 @@ class TheOneApiBase(ABC):
         return self
 
 
+    def page(self, page: int) -> "TheOneApiBase":
+        """
+        Sets the page option to the given value and returns the object for chaining.
+
+        Parameters
+        ----------
+        page : int
+            The value to set the page option to.
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        self.options.page = page
+        return self
+    
+
 class TheOneApiDocBase:
     """
     Base class for individual document objects that will be retrived using TheOneApi.
