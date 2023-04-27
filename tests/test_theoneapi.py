@@ -350,3 +350,19 @@ class TestTheOneAPI(unittest.TestCase):
         movies = sdk.Movies(api).match("names", "The Return of the King").fetch()
         self.assertEqual(movies.metadata["limit"], 1000)
         self.assertListEqual([movie.name for movie in movies.docs], [])
+
+    def test_movies_object_include(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        movies = sdk.Movies(api).sort("academyAwardNominations", sdk.SortOrder.DESCENDING).include("academyAwardNominations", [13,11,7]).fetch()
+        self.assertEqual(len(movies.docs), 3)
+        self.assertListEqual([movie.academyAwardWins for movie in movies.docs], [4,11,1])
+
+        movies = sdk.Movies(api).sort("academyAwardNominations", sdk.SortOrder.DESCENDING).include("academyAwardNominations", [13,11,7], True).fetch()
+        self.assertEqual(len(movies.docs), 5)
+        self.assertListEqual([movie.academyAwardWins for movie in movies.docs], [17,2,1,0,0])
+
+    def test_movies_object_exclude(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        movies = sdk.Movies(api).sort("academyAwardNominations", sdk.SortOrder.DESCENDING).exclude("academyAwardNominations", [13,11,7]).fetch()
+        self.assertEqual(len(movies.docs), 5)
+        self.assertListEqual([movie.academyAwardWins for movie in movies.docs], [17,2,1,0,0])

@@ -73,11 +73,12 @@ class TheOneApiBase(ABC):
     match(field: str, value: Union[str, int, float], negate: bool = False) -> TheOneApiBase
         Sets the filter option to a string for matching the given field to the given value and returns the object for chaining.
 
-    include(field: str, values: list(Union[str, int, float])) -> TheOneApiBase
+    include(field: str, values: list(Union[str, int, float]), negate: bool = False) -> TheOneApiBase
         Sets the filter option to a string for matching the given field to any of the given values and returns the object for chaining.
 
     exclude(field: str, values: list(Union[str, int, float])) -> TheOneApiBase
         Sets the filter option to a string for matching the given field to anything not one of the given values and returns the object for chaining.
+        This is a convenience method that calls include with the negate parameter set to True.
 
     exists(field: str, negate: boolean = False) -> TheOneApiBase
         Sets the filter option to a string for matching if the given field exists (or doesn't exist, based on the negate parameter) and returns the object for chaining.
@@ -293,6 +294,47 @@ class TheOneApiBase(ABC):
 
         self.options.filter = f"{field}{negate and '!' or ''}={value}"
         return self
+    
+    def include(self, field: str, values: list[Union[str, int, float]], negate: bool = False) -> "TheOneApiBase":
+        """
+        Sets the include option to a string for matching the given field to the given values and returns the object for chaining.
+
+        Parameters
+        ----------
+        field : str
+            The field to match.
+        values : list[Union[str,int,float]]
+            The values to match the field to.
+        negate : bool, optional
+            Whether to negate the match, by default False
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        self.options.filter = f"{field}{negate and '!' or ''}={','.join(map(str,values))}"
+        return self
+    
+    def exclude(self, field: str, values: list[Union[str, int, float]]) -> "TheOneApiBase":
+        """
+        Sets the exclude option to a string for matching the given field to the given values and returns the object for chaining.
+
+        Parameters
+        ----------
+        field : str
+            The field to match.
+        values : list[Union[str,int,float]]
+            The values to match the field to.
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        return self.include(field, values, True)
 
 
 class TheOneApiDocBase:
