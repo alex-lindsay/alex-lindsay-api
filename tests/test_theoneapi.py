@@ -465,3 +465,34 @@ class TestTheOneAPI(unittest.TestCase):
         movies = sdk.Movies(api).by_id("5cd95395de30eff6ebccde5b")
         self.assertEqual(len(movies.docs), 1)
         self.assertListEqual([movie.name for movie in movies.docs], ["The Two Towers"])
+
+    def test_quotes_object_fetch(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        quotes = sdk.Quotes(api).sort("dialog").limit(3).page(2).fetch()
+        self.assertEqual(quotes.metadata["total"], 2384) # From Postman test API call
+        self.assertEqual(quotes.metadata["limit"], 3) # From Postman test API call
+        self.assertEqual(quotes.metadata["offset"], None) 
+        self.assertEqual(quotes.metadata["page"], 2) # From Postman test API call
+        self.assertEqual(quotes.metadata["pages"], 795) # From Postman test API call
+        self.assertEqual(len(quotes.docs), 3)
+        self.assertDictEqual(quotes.docs[0].as_dict(), {
+            # "_id": "5cd96e05de30eff6ebcce825", # _id attribute is merged to id
+            "dialog": "\"There and Back Again, a Hobbit's tale\" by Bilbo Baggins and \"The Lord of the Rings\" by Frodo Baggins. You finished it.",
+            "movie": "5cd95395de30eff6ebccde5d",
+            "character": "5cd99d4bde30eff6ebccfd0d",
+            "id": "5cd96e05de30eff6ebcce825"
+        })
+        self.assertDictEqual(quotes.docs[1].as_dict(), {
+            # "_id": "5cd96e05de30eff6ebcceb64", # _id attribute is merged to id
+            "dialog": "' i vethed... n' i onnad. Boe bedich go Frodo. Han b'd l'n.",
+            "movie": "5cd95395de30eff6ebccde5b",
+            "character": "5cd99d4bde30eff6ebccfc07",
+            "id": "5cd96e05de30eff6ebcceb64"
+        })
+        self.assertDictEqual(quotes.docs[2].as_dict(), {
+            # "_id": "5cd96e05de30eff6ebcceb7d", # _id attribute is merged to id
+            "dialog": "'-bedin o gurth ne dagor.",
+            "movie": "5cd95395de30eff6ebccde5b",
+            "character": "5cd99d4bde30eff6ebccfbe6",
+            "id": "5cd96e05de30eff6ebcceb7d"
+        })
