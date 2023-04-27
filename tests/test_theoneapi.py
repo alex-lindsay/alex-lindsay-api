@@ -94,16 +94,16 @@ class TestTheOneAPI(unittest.TestCase):
         self.assertEqual(len(movies["docs"]), 3)
         self.assertEqual([movie["name"] for movie in movies["docs"]], TestTheOneAPI.SORTED_MOVIE_NAMES[3:6])
 
-    # TODO - This test is failing. I'm not sure why. offset is not working as expected.
     def test_movies_offset(self):
-        # api = sdk.TheOneApi(VALID_API_KEY)
-        # options = sdk.RequestOptions(sort="name", limit=3, page=2, offset=1)
-        # movies = api.movies(options=options)
-        # self.assertIn("docs", movies)
-        # self.assertEqual(movies["total"], 8)
-        # self.assertEqual(len(movies["docs"]), 3)
-        # self.assertEqual([movie["name"] for movie in movies["docs"]], TestTheOneAPI.SORTED_MOVIE_NAMES[4:7])
-        pass
+        api = sdk.TheOneApi(VALID_API_KEY)
+        options = sdk.RequestOptions(sort="-academyAwardWins", limit=4, page=2, offset=2)
+        movies = api.movies(options=options)
+        self.assertIn("docs", movies)
+        self.assertEqual(movies["total"], 8)
+        self.assertEqual(movies["offset"], 2)
+        self.assertNotIn("page", movies)
+        self.assertEqual(len(movies["docs"]), 4)
+        self.assertEqual([movie["academyAwardWins"] for movie in movies["docs"]], [4, 2, 1, 1])
 
     def test_movies_filter(self):
         api = sdk.TheOneApi(VALID_API_KEY)
@@ -245,3 +245,21 @@ class TestTheOneAPI(unittest.TestCase):
         self.assertEqual(movies.metadata["pages"], 3)
         self.assertEqual(len(movies.docs), 3)
         self.assertListEqual([movie.name for movie in movies.docs], list(reversed(TestTheOneAPI.SORTED_MOVIE_NAMES))[3:6])
+
+    def test_movies_object_offset(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        movies = sdk.Movies(api).sort("academyAwardWins", sdk.SortOrder.DESCENDING).limit(4).offset(2).fetch()
+        self.assertEqual(movies.metadata["limit"], 4)
+        self.assertEqual(movies.metadata["total"], 8)
+        self.assertEqual(movies.metadata["page"], None)
+        self.assertEqual(movies.metadata["pages"], None)
+        self.assertEqual(len(movies.docs), 4)
+        self.assertListEqual([movie.academyAwardWins for movie in movies.docs], [4, 2, 1, 1])
+
+        movies = sdk.Movies(api).sort("academyAwardWins", sdk.SortOrder.DESCENDING).limit(4).offset(100).fetch()
+        self.assertEqual(movies.metadata["limit"], 4)
+        self.assertEqual(movies.metadata["total"], 8)
+        self.assertEqual(movies.metadata["page"], None)
+        self.assertEqual(movies.metadata["pages"], None)
+        self.assertEqual(len(movies.docs), 0)
+        self.assertListEqual([movie.academyAwardWins for movie in movies.docs], [])

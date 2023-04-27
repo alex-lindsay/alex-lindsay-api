@@ -9,6 +9,7 @@ class SortOrder(Enum):
     ASCENDING = "+"
     DESCENDING = "-"
 
+
 class TheOneApiBase(ABC):
     """
     Base class for objects that will be retrived using TheOneApi
@@ -97,13 +98,7 @@ class TheOneApiBase(ABC):
         self.api = api
         self.options = options is not None and options or RequestOptions()
         self.docs = []
-        self.metadata = {
-            "total": 0,
-            "limit": 0,
-            "offset": 0,
-            "page": 0,
-            "pages": 0
-        }
+        self.metadata = {"total": 0, "limit": 0, "offset": 0, "page": 0, "pages": 0}
 
     def set_metadata(self, data: dict) -> "TheOneApiBase":
         """
@@ -146,7 +141,7 @@ class TheOneApiBase(ABC):
         return self.options
 
     @abstractmethod
-    def fetch(self) -> "TheOneApiBase":
+    def fetch(self) -> "TheOneApiBase": # pragma: no cover
         """
         Fetches the data from the API using the given options and returns the object for chaining.
 
@@ -158,7 +153,9 @@ class TheOneApiBase(ABC):
 
         pass
 
-    def sort(self, field: str, order: SortOrder = SortOrder.ASCENDING) -> "TheOneApiBase":
+    def sort(
+        self, field: str, order: SortOrder = SortOrder.ASCENDING
+    ) -> "TheOneApiBase":
         """
         Sets the sort option to the given field, marking it as ascending as needed and returns the object for chaining.
 
@@ -196,7 +193,6 @@ class TheOneApiBase(ABC):
         self.options.limit = limit
         return self
 
-
     def page(self, page: int) -> "TheOneApiBase":
         """
         Sets the page option to the given value and returns the object for chaining.
@@ -214,7 +210,25 @@ class TheOneApiBase(ABC):
 
         self.options.page = page
         return self
-    
+
+    def offset(self, offset: int) -> "TheOneApiBase":
+        """
+        Sets the offset option to the given value and returns the object for chaining.
+
+        Parameters
+        ----------
+        offset : int
+            The value to set the offset option to.
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        self.options.offset = offset
+        return self
+
 
 class TheOneApiDocBase:
     """
@@ -414,7 +428,7 @@ class RequestOptions:
         self,
         limit: int = None,
         page: int = None,
-        # offset: int = None,
+        offset: int = None,
         sort: str = None,
         filter: str = None,
     ) -> None:
@@ -426,7 +440,7 @@ class RequestOptions:
         page : int
             The page number to return. Default is None.
         offset : int
-            TODO - The number of results to skip before returning results. Default is None.
+            The number of results to skip before returning results. Default is None.
         sort : str
             A field name to sort by. Default is None.
             An optional leading + on a field name makes it ascending.
@@ -437,7 +451,7 @@ class RequestOptions:
 
         self.limit = limit
         self.page = page
-        # self.offset = offset
+        self.offset = offset
         self.sort = sort
         self.filter = filter
 
@@ -461,12 +475,13 @@ class RequestOptions:
 
         url_option_strings = []
 
+        if self.offset is not None:
+            url_option_strings.append("offset=" + str(self.offset))
         if self.limit is not None:
             url_option_strings.append("limit=" + str(self.limit))
-        if self.page is not None:
+        # If offset is set, page should be ignored.
+        if self.page is not None and self.offset is None:
             url_option_strings.append("page=" + str(self.page))
-        # if self.offset is not None:
-        #     url_option_strings.append("offset=" + str(self.offset))
         if self.sort is not None:
             if self.sort[0] == "-":
                 self.sort = self.sort[1:] + ":desc"
