@@ -1,14 +1,15 @@
+import time
 import unittest
 from theoneapi import sdk
-from pprint import pprint
 
 VALID_API_KEY = "***REMOVED***"
 INVALID_API_KEY = "FOO"
 
-# NOTE: Normally I'd mock the actual API Calls to The One API, but I'm not going to do that in the interest of saving time.
-
-
 class TestTheOneAPI(unittest.TestCase):
+
+    def tearDown(self):
+        time.sleep(10)
+
     SORTED_MOVIE_NAMES = [
         "The Battle of the Five Armies",
         "The Desolation of Smaug",
@@ -188,6 +189,33 @@ class TestTheOneAPI(unittest.TestCase):
         self.assertEqual(quotes["pages"], 1)
         self.assertEqual(len(quotes["docs"]), 1)
         self.assertDictEqual(quotes["docs"][0], specific_quote)
+
+
+    def test_movie_quotes(self):
+        specific_quote = {
+            "_id": "5cd96e05de30eff6ebcce9d6",
+            "dialog": "\"Samwise the Brave.\"",
+            "movie": "5cd95395de30eff6ebccde5b",
+            "character": "5cd99d4bde30eff6ebccfd0d",
+            "id": "5cd96e05de30eff6ebcce9d6"
+        }
+        api = sdk.TheOneApi(INVALID_API_KEY)
+        quotes = api.movie_quotes("5cd95395de30eff6ebccde5b")
+        self.assertIn("message", quotes)
+        self.assertEqual(quotes["message"], "Unauthorized.")
+
+        api = sdk.TheOneApi(VALID_API_KEY)
+        options = sdk.RequestOptions(sort="dialog")
+        quotes = api.movie_quotes("5cd95395de30eff6ebccde5b", options)
+        self.assertIn("docs", quotes)
+        self.assertEqual(quotes["total"], 1009)
+        self.assertEqual(quotes["limit"], 1000)
+        self.assertEqual(quotes["offset"], 0)
+        self.assertEqual(quotes["page"], 1)
+        self.assertEqual(quotes["pages"], 2)
+        self.assertEqual(len(quotes["docs"]), 1000)
+        self.assertDictEqual(quotes["docs"][1], specific_quote)
+
 
 
     def test_movie_object(self):
@@ -496,3 +524,10 @@ class TestTheOneAPI(unittest.TestCase):
             "character": "5cd99d4bde30eff6ebccfbe6",
             "id": "5cd96e05de30eff6ebcceb7d"
         })
+
+    def test_quotes_object_by_id(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        quotes = sdk.Quotes(api).by_id("5cd96e05de30eff6ebcceb7d")
+        self.assertEqual(len(quotes.docs), 1)
+        self.assertListEqual([quote.dialog for quote in quotes.docs], ["'-bedin o gurth ne dagor."])
+

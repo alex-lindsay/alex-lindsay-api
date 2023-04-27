@@ -2,7 +2,6 @@ from typing import TypeVar, Generic, Union
 from abc import ABC, abstractmethod
 from enum import Enum
 import requests
-import pprint
 
 
 class SortOrder(Enum):
@@ -932,7 +931,7 @@ class TheOneApi:
         response = requests.get(url, headers=headers)
         return response.json()
     
-    def movie_quotes(self, id: str) -> dict:
+    def movie_quotes(self, id: str, options: RequestOptions = None) -> dict:
         """
         Returns a quote collection containing quotes from one movie from The One API based on the provided movie id.
 
@@ -949,6 +948,7 @@ class TheOneApi:
         """
         # TODO - Deal with error conditions - get happy path working first
         url = f"{self.BASE_URL}movie/{id}/quote"
+        url = options and options.url_with_query(url) or url
         headers = {"Authorization": "Bearer " + self._api_key}
         response = requests.get(url, headers=headers)
         return response.json()
