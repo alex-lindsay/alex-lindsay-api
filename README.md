@@ -11,6 +11,13 @@ There is a low-level set of apis that are meant to not quite mirror the existing
 
 ## Architecture:
 
+Type Hinting is used to help ensure that internal consistency is managed, given Python's loose typing.
+
+Fundamentally relatively straightforward, this SDK uses few supporting packages:
+`typing` is used to provide a Union type which is utilized for some of the filters which can use string, int, or float values.
+`abc` is used to help protect the AbstractBaseClasses (TheOneApiBase and TheOneApiDocBase) from being able to be directly instantiated. (Untested/unverified)
+`enum` is used to provide a SortOrder enumeration to help with readability for the TheOneApiBase.sort method.
+
 ## Installation:
 To install the SDK, from the root directory of the project, run `pip install .`.
 To uninstall the SDK, run `pip uninstall theoneapi`.
