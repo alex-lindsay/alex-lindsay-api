@@ -91,6 +91,9 @@ class TheOneApiBase(ABC):
 
     greaterThan(field: str, value: Union[str, int, float], orEqual: boolean = False) -> TheOneApiBase
         Sets the filter option to a string for matching the given field to values greater than (or optionally equal to) the given value and returns the object for chaining.
+
+    by_id(id: str) -> TheOneApiBase
+        Get a specific document from the collection based on the idea and returns the collection object for chaining.
     """
 
     METADATA_FIELDS = ["total", "limit", "offset", "page", "pages"]
@@ -430,9 +433,12 @@ class TheOneApiDocBase:
     VALID_ATTRIBUTES : list[str]
         A list of the valid attributes for the object.
 
+    api : TheOneApi
+        The TheOneApi object that was used to make the request.
+
     Methods
     -------
-    from_dict(data: dict) -> T
+    from_dict(api: TheOneApi, data: dict) -> T
         Updates the attributes of the object with the values from the data dict.
 
     asdict() -> dict
@@ -477,16 +483,19 @@ class TheOneApiDocBase:
 
         return {k: v for (k, v) in self.__dict__.items() if k in self.VALID_ATTRIBUTES}
 
-    def from_dict(self, data: dict) -> "TheOneApiDocBase":
+    def from_dict(self, api: "TheOneApi", data: dict) -> "TheOneApiDocBase":
         """
         Updates the attributes of the Movie object with the values from the data dict.
 
         Parameters
         ----------
+        api : TheOneApi
+            The TheOneApi object that was used to make the request.
         data : dict
             A dictionary of key/value pairs to update the Movie object with.
         """
 
+        self.api = api
         self.__dict__.update(
             {k: v for (k, v) in data.items() if k in self.VALID_ATTRIBUTES}
         )
@@ -516,7 +525,12 @@ class Movie(TheOneApiDocBase):
     academyAwardWins : int
         The number of academy award wins for the movie.
     rottenTomatesScore : int
-        The rotten tomatoes score for the movie.
+        The rotten tomatoes score for the movie.'
+
+    Methods
+    -------
+    quotes() -> Quotes
+        Returns a Quotes object for the given Movie.
     """
 
     VALID_ATTRIBUTES = [
@@ -532,6 +546,18 @@ class Movie(TheOneApiDocBase):
 
     def __init__(self) -> None:
         super().__init__()
+
+    def quotes(self) -> "Quotes":
+        """
+        Returns a Quotes object for the given Movie.
+
+        Returns
+        -------
+        Quotes
+            A Quotes object for the given Movie.
+        """
+
+        return Quotes(self.api).match("movie", self.id).fetch()
 
 
 class Quote(TheOneApiDocBase):
@@ -572,7 +598,7 @@ class Movies(TheOneApiBase):
     # TODO: Error handling - senfing a page number of 0 or less returns an error message JSON
     def fetch(self) -> "Movies":
         """
-        Fetches the data from the API using the given options and returns the object for chaining.
+        Fetches movie data from the API using the given options and returns the object for chaining.
 
         Returns
         -------
@@ -585,7 +611,89 @@ class Movies(TheOneApiBase):
         super().set_metadata(data)
 
         if "docs" in data:
-            self.docs = [Movie().from_dict(movie) for movie in data["docs"]]
+            self.docs = [Movie().from_dict(self.api, movie) for movie in data["docs"]]
+
+        return self
+    
+    def by_id(self, id: str) -> "Movies":
+        """
+        Gets a specific movie by id.
+
+        Parameters
+        ----------
+        id : str
+            The id to match.
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        self.docs = []
+        data = self.api.movie(id)
+        super().set_metadata(data)
+
+        if "docs" in data:
+            self.docs = [Movie().from_dict(self.api, movie) for movie in data["docs"]]
+
+        return self
+
+
+class Quotes(TheOneApiBase):
+    """
+    A class for retrieving a list of quotes from the-one-api.dev and representing them as a list of Quote objects.
+
+    Attributes
+    ----------
+    docs : list[Quote]
+        The list of Quote objects returned by the request.
+    """
+
+    def __init__(self, api: "TheOneApi", options: "RequestOptions" = None) -> None:
+        super().__init__(api, options)
+
+    def fetch(self) -> "Quotes":
+        """
+        Fetches quote data from the API using the given options and returns the object for chaining.
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        self.docs = []
+        data = self.api.quotes(self.options)
+        super().set_metadata(data)
+
+        if "docs" in data:
+            self.docs = [Quote().from_dict(self.api, quote) for quote in data["docs"]]
+
+        return self
+
+    def by_id(self, id: str) -> "Quotes":
+        """
+        Gets a specific quote by id.
+
+        Parameters
+        ----------
+        id : str
+            The id to match.
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        self.docs = []
+        data = self.api.quote(id)
+        super().set_metadata(data)
+
+        # TODO - what happens if self.api is None?
+        if "docs" in data:
+            self.docs = [Quote().from_dict(self.api, quote) for quote in data["docs"]]
 
         return self
 
@@ -698,8 +806,8 @@ class TheOneApi:
     A simple example of how to use this SDK:
     >>> import theoneapi
     >>> api = theoneapi.TheOneApi('YOUR_API_KEY')
-    >>> books = api.books()
-    >>> print(books)
+    >>> movies = api.movies()
+    >>> print(movies.docs[0].name)
 
     Attributes
     ----------
@@ -710,6 +818,14 @@ class TheOneApi:
     -------
     movies(options: RequestOptions = None)
         Returns a list of movies (paginated, sorted, or filtered) from The One API based on the provided options.
+    movie(id: str)
+        Returns a movie collection containing one movie from The One API based on the provided movie id.
+    quotes(options: RequestOptions = None)
+        Returns a list of quotes (paginated, sorted, or filtered) from The One API based on the provided options.
+    quote(id: str)
+        Returns a quote collection containing one movie from The One API based on the provided quote id.
+    movie_quotes(id: str)
+        Returns a quote collection containing quotes from one movie from The One API based on the provided movie id.
     """
 
     BASE_URL = "https://the-one-api.dev/v2/"
@@ -743,6 +859,94 @@ class TheOneApi:
         # TODO - Deal with error conditions - get happy path working first
         url = self.BASE_URL + "movie"
         url = options and options.url_with_query(url) or url
+        headers = {"Authorization": "Bearer " + self._api_key}
+        response = requests.get(url, headers=headers)
+        return response.json()
+
+    def movie(self, id: str) -> dict:
+        """
+        Returns a movie collection containing one movie from The One API based on the provided movie id.
+
+        Parameters
+        ----------
+        id : str
+            The id of the movie to return.
+
+        Returns
+        -------
+        dict
+            A movie from The One API based on the provided movie id.
+
+        """
+
+        # TODO - Deal with error conditions - get happy path working first
+        url = self.BASE_URL + "movie/" + id
+        headers = {"Authorization": "Bearer " + self._api_key}
+        response = requests.get(url, headers=headers)
+        return response.json()
+    
+    def quotes(self, options: RequestOptions = None) -> dict:
+        """
+        Returns a list of quotes (paginated, sorted, or filtered) from The One API based on the provided options.
+
+        Parameters
+        ----------
+        options : RequestOptions
+            The options to use when making the request. Default is None.
+
+        Returns
+        -------
+        list[dict]
+            A list of quotes from The One API based on the provided options.
+
+        """
+            
+        # TODO - Deal with error conditions - get happy path working first
+        url = self.BASE_URL + "quote"
+        url = options and options.url_with_query(url) or url
+        headers = {"Authorization": "Bearer " + self._api_key}
+        response = requests.get(url, headers=headers)
+        return response.json()
+    
+    def quote(self, id: str) -> dict:
+        """
+        Returns a quote collection containing one quote from The One API based on the provided quote id.
+
+        Parameters
+        ----------
+        id : str
+            The id of the quote to return.
+
+        Returns
+        -------
+        dict
+            A quote from The One API based on the provided quote id.
+
+        """
+            
+        # TODO - Deal with error conditions - get happy path working first
+        url = self.BASE_URL + "quote/" + id
+        headers = {"Authorization": "Bearer " + self._api_key}
+        response = requests.get(url, headers=headers)
+        return response.json()
+    
+    def movie_quotes(self, id: str) -> dict:
+        """
+        Returns a quote collection containing quotes from one movie from The One API based on the provided movie id.
+
+        Parameters
+        ----------
+        id : str
+            The id of the movie to return quotes for.
+
+        Returns
+        -------
+        dict
+            A quote collection from The One API based on the provided movie id.
+
+        """
+        # TODO - Deal with error conditions - get happy path working first
+        url = f"{self.BASE_URL}movie/{id}/quote"
         headers = {"Authorization": "Bearer " + self._api_key}
         response = requests.get(url, headers=headers)
         return response.json()

@@ -146,7 +146,7 @@ class TestTheOneAPI(unittest.TestCase):
         result_dict = movie_dict.copy()
         result_dict["id"] = result_dict.pop("_id")  # The API returns _id, but the SDK returns id
         result_dict.pop("invalidProperty") # The SDK should not return invalid properties
-        movie = sdk.Movie().from_dict(movie_dict)
+        movie = sdk.Movie().from_dict(None, movie_dict)
 
         for attribute in sdk.Movie.VALID_ATTRIBUTES:
             self.assertEqual(movie[attribute], result_dict[attribute])
@@ -169,7 +169,7 @@ class TestTheOneAPI(unittest.TestCase):
         result_dict = quote_dict.copy()
         result_dict["id"] = result_dict.pop("_id")  # The API returns _id, but the SDK returns id
         result_dict.pop("invalidProperty") # The SDK should not return invalid properties
-        quote = sdk.Quote().from_dict(quote_dict)
+        quote = sdk.Quote().from_dict(None, quote_dict)
 
         for attribute in sdk.Quote.VALID_ATTRIBUTES:
             self.assertEqual(quote[attribute], result_dict[attribute])
