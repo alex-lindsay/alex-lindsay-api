@@ -1,8 +1,13 @@
 from typing import TypeVar, Generic, Union
 from abc import ABC, abstractmethod
+from enum import Enum
 import requests
 import pprint
 
+
+class SortOrder(Enum):
+    ASCENDING = "+"
+    DESCENDING = "-"
 
 class TheOneApiBase(ABC):
     """
@@ -34,7 +39,7 @@ class TheOneApiBase(ABC):
 
     get_options() -> RequestOptions
         Returns the RequestOptions object used to make the request.
-    
+
     fetch() -> TheOneApiBase
         Fetches the data from the API using the given options and returns the object for chaining.
 
@@ -53,9 +58,9 @@ class TheOneApiBase(ABC):
     offset(offset: int) -> TheOneApiBase
         Sets the offset option to the given value and returns the object for chaining.
 
-    sort(sort: str, ascending: boolean = True) -> TheOneApiBase
-        Sets the sort option to the given value, marking it as ascending as needed and returns the object for chaining.
-    
+    sort(field: str, order: SortOrder = ASCENDING) -> TheOneApiBase
+        Sets the sort option to the given field, marking it as ascending as needed and returns the object for chaining.
+
     filter(filter: str) -> TheOneApiBase
         Sets the filter option to the given value and returns the object for chaining.
 
@@ -91,8 +96,7 @@ class TheOneApiBase(ABC):
         self.page = 0
         self.pages = 0
 
-
-    def set_metadata(self, data: dict) -> 'TheOneApiBase':
+    def set_metadata(self, data: dict) -> "TheOneApiBase":
         """
         Updates the attributes of the Base object with the values from the data dict.
         Child classes are expected to convert the docs list into a list of BaseDoc objects.
@@ -109,7 +113,6 @@ class TheOneApiBase(ABC):
         self.page = "page" in data and data["page"] or None
         self.pages = "pages" in data and data["pages"] or None
         return self
-
 
     def set_options(self, options: "RequestOptions") -> "TheOneApiBase":
         """
@@ -135,7 +138,7 @@ class TheOneApiBase(ABC):
         """
 
         return self.options
-    
+
     @abstractmethod
     def fetch(self) -> "TheOneApiBase":
         """
@@ -148,6 +151,27 @@ class TheOneApiBase(ABC):
         """
 
         pass
+
+    def sort(self, field: str, order: SortOrder = SortOrder.ASCENDING) -> "TheOneApiBase":
+        """
+        Sets the sort option to the given field, marking it as ascending as needed and returns the object for chaining.
+
+        Parameters
+        ----------
+        sort : str
+            The field to sort by.
+        ascending : bool, optional
+            Whether to sort ascending or descending, by default True
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        self.options.sort = order.value + field
+        return self
+    
 
 
 class TheOneApiDocBase:
@@ -310,10 +334,13 @@ class Movies(TheOneApiBase):
 
         data = self.api.movies(self.options)
         super().set_metadata(data)
-        self.docs = "docs" in data and [Movie().from_dict(movie) for movie in data["docs"]] or []
+        self.docs = (
+            "docs" in data
+            and [Movie().from_dict(movie) for movie in data["docs"]]
+            or []
+        )
 
         return self
-
 
 
 class RequestOptions:

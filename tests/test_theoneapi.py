@@ -193,3 +193,19 @@ class TestTheOneAPI(unittest.TestCase):
         self.assertEqual(movies.pages, 1)
         self.assertEqual(len(movies.docs), 8)
         self.assertSetEqual(frozenset([movie.name for movie in movies.docs]), frozenset(TestTheOneAPI.SORTED_MOVIE_NAMES))
+
+    def test_movies_object_sort(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        movies = sdk.Movies(api).sort("name").fetch()
+        self.assertEqual(movies.total, 8)
+        self.assertEqual(movies.page, 1)
+        self.assertEqual(movies.pages, 1)
+        self.assertEqual(len(movies.docs), 8)
+        self.assertListEqual([movie.name for movie in movies.docs], TestTheOneAPI.SORTED_MOVIE_NAMES)
+
+        movies.sort("name", sdk.SortOrder.DESCENDING).fetch()
+        self.assertEqual(movies.total, 8)
+        self.assertEqual(movies.page, 1)
+        self.assertEqual(movies.pages, 1)
+        self.assertEqual(len(movies.docs), 8)
+        self.assertListEqual([movie.name for movie in movies.docs], list(reversed(TestTheOneAPI.SORTED_MOVIE_NAMES)))
