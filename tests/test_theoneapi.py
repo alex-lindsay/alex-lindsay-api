@@ -131,6 +131,25 @@ class TestTheOneAPI(unittest.TestCase):
         movies = api.movies(options=options)
         self.assertEqual([movie["name"] for movie in movies["docs"]], TestTheOneAPI.SORTED_BIG_WINNER_MOVIE_NAMES)
 
+
+    def test_movie(self):
+        api = sdk.TheOneApi(INVALID_API_KEY)
+        movies = api.movie("5cd95395de30eff6ebccde5b")
+        self.assertIn("message", movies)
+        self.assertEqual(movies["message"], "Unauthorized.")
+
+        api = sdk.TheOneApi(VALID_API_KEY)
+        movies = api.movie("5cd95395de30eff6ebccde5b")
+        self.assertIn("docs", movies)
+        self.assertEqual(movies["total"], 1)
+        self.assertEqual(movies["limit"], 1000)
+        self.assertEqual(movies["offset"], 0)
+        self.assertEqual(movies["page"], 1)
+        self.assertEqual(movies["pages"], 1)
+        self.assertEqual(len(movies["docs"]), 1)
+        self.assertEqual([movie["name"] for movie in movies["docs"]], ["The Two Towers"])
+
+
     def test_movie_object(self):
         movie_dict = {
             "_id": "5cd95395de30eff6ebccde5c",
@@ -400,3 +419,9 @@ class TestTheOneAPI(unittest.TestCase):
         movies = sdk.Movies(api).sort("academyAwardWins", sdk.SortOrder.DESCENDING).greater_than("academyAwardWins", 11, True).fetch()
         self.assertEqual(len(movies.docs), 2)
         self.assertListEqual([movie.name for movie in movies.docs], self.SORTED_BIG_WINNER_MOVIE_NAMES)
+
+    def test_movies_object_by_id(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        movies = sdk.Movies(api).by_id("5cd95395de30eff6ebccde5c").fetch()
+        self.assertEqual(len(movies.docs), 1)
+        self.assertListEqual([movie.name for movie in movies.docs], ["The Return of the King"])

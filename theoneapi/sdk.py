@@ -925,7 +925,7 @@ class TheOneApi:
         """
             
         # TODO - Deal with error conditions - get happy path working first
-        url = self.BASE_URL + "quote/" + id
+        url = f"{self.BASE_URL}quote/{id}"
         headers = {"Authorization": "Bearer " + self._api_key}
         response = requests.get(url, headers=headers)
         return response.json()
