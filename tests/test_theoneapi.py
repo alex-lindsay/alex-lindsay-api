@@ -374,3 +374,9 @@ class TestTheOneAPI(unittest.TestCase):
 
         movies = sdk.Movies(api).exists("academyAwardNominations", True).fetch()
         self.assertEqual(len(movies.docs), 0)
+
+    def test_movies_object_regex(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        movies = sdk.Movies(api).sort("name").regex("name", "/of the/i").fetch()
+        self.assertEqual(len(movies.docs), len(self.SORTED_OF_THE_MOVIE_NAMES))
+        self.assertListEqual([movie.name for movie in movies.docs], self.SORTED_OF_THE_MOVIE_NAMES)

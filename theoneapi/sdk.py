@@ -355,6 +355,28 @@ class TheOneApiBase(ABC):
 
         self.options.filter = f"{negate and '!' or ''}{field}"
         return self
+    
+    def regex(self, field: str, regex: str, negate: bool = False) -> "TheOneApiBase":
+        """
+        Sets the filter option to a string for matching the given field to the given regex and returns the object for chaining.
+
+        Parameters
+        ----------
+        field : str
+            The field to match.
+        regex : str
+            The regex to match the field to.
+        negate : bool, optional
+            Whether to negate the match, by default False
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        self.options.filter = f"{field}{negate and '!' or ''}={regex}"
+        return self
 
 
 class TheOneApiDocBase:
