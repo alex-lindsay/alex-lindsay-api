@@ -34,10 +34,12 @@ To uninstall the SDK, run `pip uninstall theoneapi`.
 You can run `python example.py` from the project to see the sdk in use (once you add a valid API key).
 
 ```
+from decouple import config
 from theoneapi import sdk
 from pprint import pprint
 
-VALID_API_KEY = "PUT_YOUR_API_KEY_HERE"
+VALID_API_KEY = config("THEONEAPI_API_KEY")
+print(f"API Key: {VALID_API_KEY}")
 
 api = sdk.TheOneApi(VALID_API_KEY)
 options = sdk.RequestOptions(sort="name", filter="name=/Of The/i")
