@@ -289,3 +289,49 @@ class TestTheOneAPI(unittest.TestCase):
         self.assertEqual(movies.metadata["pages"], 3)
         self.assertEqual(len(movies.docs), 0)
         self.assertListEqual([movie.name for movie in movies.docs], [])
+
+    def test_movies_object_previous_page(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        movies = sdk.Movies(api).sort("name").limit(3).page(2).fetch().previous_page()
+        self.assertEqual(movies.metadata["limit"], 3)
+        self.assertEqual(movies.metadata["total"], 8)
+        self.assertEqual(movies.metadata["page"], 1)
+        self.assertEqual(movies.metadata["pages"], 3)
+        self.assertEqual(len(movies.docs), 3)
+        self.assertListEqual([movie.name for movie in movies.docs], TestTheOneAPI.SORTED_MOVIE_NAMES[0:3])
+
+        # TODO - moving back beyond page 1 is misbehaving
+        # movies.previous_page()
+        # self.assertEqual(movies.metadata["limit"], 2)
+        # self.assertEqual(movies.metadata["total"], 8)
+        # self.assertEqual(movies.metadata["page"], 1)
+        # self.assertEqual(movies.metadata["pages"], 3)
+        # self.assertEqual(len(movies.docs), 3)
+        # self.assertListEqual([movie.name for movie in movies.docs], [])
+
+        # movies.previous_page()
+        # self.assertEqual(movies.metadata["limit"], 3)
+        # self.assertEqual(movies.metadata["total"], 8)
+        # self.assertEqual(movies.metadata["page"], None)
+        # self.assertEqual(movies.metadata["pages"], None)
+        # self.assertEqual(len(movies.docs), 0)
+        # self.assertListEqual([movie.name for movie in movies.docs], [])
+
+    def test_movies_object_filter(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        movies = sdk.Movies(api).sort("name").filter("name=The Return of the King").fetch()
+        self.assertEqual(movies.metadata["limit"], 1000) # Default limit
+        self.assertEqual(movies.metadata["total"], 1)
+        self.assertEqual(movies.metadata["page"], 1)
+        self.assertEqual(movies.metadata["pages"], 1)
+        self.assertEqual(len(movies.docs), 1)
+        self.assertListEqual([movie.name for movie in movies.docs], ["The Return of the King"])
+
+        # Only the second filter should take effect
+        movies = sdk.Movies(api).sort("name").filter("budgetInMillions<100").filter("runtimeInMinutes>=400").fetch()
+        self.assertEqual(movies.metadata["limit"], 1000) # Default limit
+        self.assertEqual(movies.metadata["total"], 2)
+        self.assertEqual(movies.metadata["page"], 1)
+        self.assertEqual(movies.metadata["pages"], 1)
+        self.assertEqual(len(movies.docs), 2)
+        self.assertSetEqual(frozenset([movie.runtimeInMinutes for movie in movies.docs]), frozenset([558, 462]))

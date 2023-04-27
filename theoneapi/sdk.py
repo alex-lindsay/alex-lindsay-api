@@ -239,8 +239,40 @@ class TheOneApiBase(ABC):
             The object for chaining.
         """
 
-        self.options.page = "page" in self.metadata and (self.metadata["page"] + 1) or 1
+        self.options.page = ("page" in self.metadata) and (self.metadata["page"] + 1) or 1
         return self.fetch()
+    
+    # TODO: There is an error which occurs if page is < 1
+    def previous_page(self) -> "TheOneApiBase":
+        """
+        Sets the page option to the previous page and returns the object for chaining.
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        self.options.page = ("page" in self.metadata) and (self.metadata["page"] - 1) or 1
+        return self.fetch()
+    
+    def filter(self, filter: str) -> "TheOneApiBase":
+        """
+        Sets the filter option to a string for matching the given field to the given value and returns the object for chaining.
+
+        Parameters
+        ----------
+        filter : str
+            The string to use as the filter in the query.
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        self.options.filter = f"{filter}"
+        return self
 
 
 class TheOneApiDocBase:
@@ -391,6 +423,7 @@ class Movies(TheOneApiBase):
     def __init__(self, api: "TheOneApi", options: "RequestOptions" = None) -> None:
         super().__init__(api, options)
 
+    # TODO: Error handling - senfing a page number of 0 or less returns an error message JSON
     def fetch(self) -> "Movies":
         """
         Fetches the data from the API using the given options and returns the object for chaining.
@@ -401,13 +434,12 @@ class Movies(TheOneApiBase):
             The object for chaining.
         """
 
+        self.docs = []
         data = self.api.movies(self.options)
         super().set_metadata(data)
-        self.docs = (
-            "docs" in data
-            and [Movie().from_dict(movie) for movie in data["docs"]]
-            or []
-        )
+
+        if "docs" in data:
+            self.docs = [Movie().from_dict(movie) for movie in data["docs"]]
 
         return self
 
