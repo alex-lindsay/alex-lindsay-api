@@ -49,11 +49,8 @@ class TheOneApiBase(ABC):
     fetch() -> TheOneApiBase
         Fetches the data from the API using the given options and returns the object for chaining.
 
-    next_page() -> TheOneApiBase
-        Fetches the next page of results and returns the object for chaining.
-
-    previous_page() -> TheOneApiBase
-        Fetches the previous page of results and returns the object for chaining.
+    sort(field: str, order: SortOrder = ASCENDING) -> TheOneApiBase
+        Sets the sort option to the given field, marking it as ascending as needed and returns the object for chaining.
 
     limit(limit: int) -> TheOneApiBase
         Sets the limit option to the given value and returns the object for chaining.
@@ -64,8 +61,11 @@ class TheOneApiBase(ABC):
     offset(offset: int) -> TheOneApiBase
         Sets the offset option to the given value and returns the object for chaining.
 
-    sort(field: str, order: SortOrder = ASCENDING) -> TheOneApiBase
-        Sets the sort option to the given field, marking it as ascending as needed and returns the object for chaining.
+    next_page() -> TheOneApiBase
+        Fetches the next page of results and returns the object for chaining.
+
+    previous_page() -> TheOneApiBase
+        Fetches the previous page of results and returns the object for chaining.
 
     filter(filter: str) -> TheOneApiBase
         Sets the filter option to the given value and returns the object for chaining.
@@ -141,7 +141,7 @@ class TheOneApiBase(ABC):
         return self.options
 
     @abstractmethod
-    def fetch(self) -> "TheOneApiBase": # pragma: no cover
+    def fetch(self) -> "TheOneApiBase":  # pragma: no cover
         """
         Fetches the data from the API using the given options and returns the object for chaining.
 
@@ -228,6 +228,19 @@ class TheOneApiBase(ABC):
 
         self.options.offset = offset
         return self
+
+    def next_page(self) -> "TheOneApiBase":
+        """
+        Sets the page option to the next page and returns the object for chaining.
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        self.options.page = "page" in self.metadata and (self.metadata["page"] + 1) or 1
+        return self.fetch()
 
 
 class TheOneApiDocBase:
