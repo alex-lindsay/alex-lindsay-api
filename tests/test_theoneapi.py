@@ -366,3 +366,11 @@ class TestTheOneAPI(unittest.TestCase):
         movies = sdk.Movies(api).sort("academyAwardNominations", sdk.SortOrder.DESCENDING).exclude("academyAwardNominations", [13,11,7]).fetch()
         self.assertEqual(len(movies.docs), 5)
         self.assertListEqual([movie.academyAwardWins for movie in movies.docs], [17,2,1,0,0])
+
+    def test_movies_object_exists(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        movies = sdk.Movies(api).exists("academyAwardNominations").fetch()
+        self.assertEqual(len(movies.docs), 8)
+
+        movies = sdk.Movies(api).exists("academyAwardNominations", True).fetch()
+        self.assertEqual(len(movies.docs), 0)

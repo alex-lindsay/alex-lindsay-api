@@ -335,6 +335,26 @@ class TheOneApiBase(ABC):
         """
 
         return self.include(field, values, True)
+    
+    def exists(self, field: str, negate: bool = False) -> "TheOneApiBase":
+        """
+        Sets the filter option to a string for matching the given field to the given values and returns the object for chaining.
+
+        Parameters
+        ----------
+        field : str
+            The field to match.
+        negate : bool, optional
+            Whether to negate the match, by default False
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        self.options.filter = f"{negate and '!' or ''}{field}"
+        return self
 
 
 class TheOneApiDocBase:
