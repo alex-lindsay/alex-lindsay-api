@@ -633,6 +633,8 @@ class Movies(TheOneApiBase):
         self.docs = []
         data = self.api.movie(id)
         super().set_metadata(data)
+        # TODO - there's probably more work to be done here to reset the RequestOptions in an ideal way
+        self.match("_id", id)
 
         if "docs" in data:
             self.docs = [Movie().from_dict(self.api, movie) for movie in data["docs"]]

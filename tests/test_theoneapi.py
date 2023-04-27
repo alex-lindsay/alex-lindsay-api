@@ -422,6 +422,6 @@ class TestTheOneAPI(unittest.TestCase):
 
     def test_movies_object_by_id(self):
         api = sdk.TheOneApi(VALID_API_KEY)
-        movies = sdk.Movies(api).by_id("5cd95395de30eff6ebccde5c").fetch()
+        movies = sdk.Movies(api).by_id("5cd95395de30eff6ebccde5b")
         self.assertEqual(len(movies.docs), 1)
-        self.assertListEqual([movie.name for movie in movies.docs], ["The Return of the King"])
+        self.assertListEqual([movie.name for movie in movies.docs], ["The Two Towers"])
