@@ -131,7 +131,6 @@ class TestTheOneAPI(unittest.TestCase):
         movies = api.movies(options=options)
         self.assertEqual([movie["name"] for movie in movies["docs"]], TestTheOneAPI.SORTED_BIG_WINNER_MOVIE_NAMES)
 
-
     def test_movie(self):
         api = sdk.TheOneApi(INVALID_API_KEY)
         movies = api.movie("5cd95395de30eff6ebccde5b")
@@ -148,6 +147,47 @@ class TestTheOneAPI(unittest.TestCase):
         self.assertEqual(movies["pages"], 1)
         self.assertEqual(len(movies["docs"]), 1)
         self.assertEqual([movie["name"] for movie in movies["docs"]], ["The Two Towers"])
+
+
+    def test_quotes(self):
+        api = sdk.TheOneApi(INVALID_API_KEY)
+        quotes = api.quotes()
+        self.assertIn("message", quotes)
+        self.assertEqual(quotes["message"], "Unauthorized.")
+
+        api = sdk.TheOneApi(VALID_API_KEY)
+        quotes = api.quotes()
+        self.assertIn("docs", quotes)
+        self.assertEqual(quotes["total"], 2384) # From Postman api test call 4/27/23
+        self.assertEqual(quotes["limit"], 1000) # Default limit
+        self.assertEqual(quotes["offset"], 0)
+        self.assertEqual(quotes["page"], 1)
+        self.assertEqual(quotes["pages"], 3)
+
+
+    def test_quote(self):
+        specific_quote = {
+            "_id": "5cd96e05de30eff6ebccebd0",
+            "dialog": "Get the wounded on horses. The wolves of Isengard will return. Leave the dead.",
+            "movie": "5cd95395de30eff6ebccde5b",
+            "character": "5cd99d4bde30eff6ebccfe19",
+            "id": "5cd96e05de30eff6ebccebd0"
+        }
+        api = sdk.TheOneApi(INVALID_API_KEY)
+        quotes = api.quote("5cd96e05de30eff6ebccebd0")
+        self.assertIn("message", quotes)
+        self.assertEqual(quotes["message"], "Unauthorized.")
+
+        api = sdk.TheOneApi(VALID_API_KEY)
+        quotes = api.quote("5cd96e05de30eff6ebccebd0")
+        self.assertIn("docs", quotes)
+        self.assertEqual(quotes["total"], 1)
+        self.assertEqual(quotes["limit"], 1000)
+        self.assertEqual(quotes["offset"], 0)
+        self.assertEqual(quotes["page"], 1)
+        self.assertEqual(quotes["pages"], 1)
+        self.assertEqual(len(quotes["docs"]), 1)
+        self.assertDictEqual(quotes["docs"][0], specific_quote)
 
 
     def test_movie_object(self):

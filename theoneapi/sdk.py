@@ -904,7 +904,7 @@ class TheOneApi:
         """
             
         # TODO - Deal with error conditions - get happy path working first
-        url = self.BASE_URL + "quote"
+        url = f"{self.BASE_URL}quote"
         url = options and options.url_with_query(url) or url
         headers = {"Authorization": "Bearer " + self._api_key}
         response = requests.get(url, headers=headers)
