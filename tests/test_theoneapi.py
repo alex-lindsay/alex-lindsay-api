@@ -335,3 +335,18 @@ class TestTheOneAPI(unittest.TestCase):
         self.assertEqual(movies.metadata["pages"], 1)
         self.assertEqual(len(movies.docs), 2)
         self.assertSetEqual(frozenset([movie.runtimeInMinutes for movie in movies.docs]), frozenset([558, 462]))
+
+    def test_movies_object_match(self):
+        api = sdk.TheOneApi(VALID_API_KEY)
+        movies = sdk.Movies(api).match("name", "The Return of the King").fetch()
+        self.assertEqual(movies.metadata["limit"], 1000)
+        self.assertListEqual([movie.name for movie in movies.docs], ["The Return of the King"])
+
+        movies = sdk.Movies(api).match("name", "The Return of the King", True).fetch()
+        self.assertEqual(movies.metadata["limit"], 1000)
+        self.assertEqual(len(movies.docs), 7)
+        self.assertNotIn("The Return of the King", [movie.name for movie in movies.docs])
+
+        movies = sdk.Movies(api).match("names", "The Return of the King").fetch()
+        self.assertEqual(movies.metadata["limit"], 1000)
+        self.assertListEqual([movie.name for movie in movies.docs], [])

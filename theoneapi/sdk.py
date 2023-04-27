@@ -70,7 +70,7 @@ class TheOneApiBase(ABC):
     filter(filter: str) -> TheOneApiBase
         Sets the filter option to the given value and returns the object for chaining.
 
-    match(field: str, value: Union[str, int, float], negate: boolean = False) -> TheOneApiBase
+    match(field: str, value: Union[str, int, float], negate: bool = False) -> TheOneApiBase
         Sets the filter option to a string for matching the given field to the given value and returns the object for chaining.
 
     include(field: str, values: list(Union[str, int, float])) -> TheOneApiBase
@@ -272,6 +272,26 @@ class TheOneApiBase(ABC):
         """
 
         self.options.filter = f"{filter}"
+        return self
+    
+    def match(self, field: str, value: Union[str, int, float], negate: bool = False) -> "TheOneApiBase":
+        """
+        Sets the filter option to a string for matching the given field to the given value and returns the object for chaining.
+
+        Parameters
+        ----------
+        field : str
+            The field to match.
+        value : Union[str,int,float]
+            The value to match the field to.
+
+        Returns
+        -------
+        TheOneApiBase
+            The object for chaining.
+        """
+
+        self.options.filter = f"{field}{negate and '!' or ''}={value}"
         return self
 
 
