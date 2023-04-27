@@ -1,8 +1,9 @@
 import time
 import unittest
 from theoneapi import sdk
+from decouple import config
 
-VALID_API_KEY = "***REMOVED***"
+VALID_API_KEY = config("THEONEAPI_API_KEY")
 INVALID_API_KEY = "FOO"
 
 class TestTheOneAPI(unittest.TestCase):
