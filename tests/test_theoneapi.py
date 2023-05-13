@@ -9,7 +9,7 @@ INVALID_API_KEY = "FOO"
 class TestTheOneAPI(unittest.TestCase):
 
     def tearDown(self):
-        time.sleep(10)
+        time.sleep(20)
 
     SORTED_MOVIE_NAMES = [
         "The Battle of the Five Armies",

@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 passwords.txt
 ..bfg-report/
+alex-lindsay-api.code-workspace
